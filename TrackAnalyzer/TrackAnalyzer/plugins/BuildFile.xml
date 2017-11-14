@@ -1,0 +1,33 @@
+<export>
+</export>
+
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+
+<!--For running ROOT-->
+<use name="root"/>
+
+<!--For getting the generalTracks Collection-->
+<use name="DataFormats/TrackReco"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="PhysicsTools/UtilAlgos"/>
+
+<!--For Trigger Results and Trigger Names on the HLT-->
+<use name="DataFormats/Common"/>
+<use name="FWCore/Common"/>
+
+<!--For CaloJet Collection Implementation-->
+<use name="DataFormats/JetReco"/>
+
+<!--For Generator based Information-->
+<use name="SimDataFormats/PileupSummaryInfo"/>
+<use name="SimDataFormats/GeneratorProducts"/>
+<use name="DataFormats/HepMCCandidate"/>
+
+<!--For Primary (Secondary) Vertex Information-->
+<use name="DataFormats/VertexReco"/>
+<use name="DataFormats/BTauReco"/>
+
+<!--For User Generated Information-->
+<flags EDM_PLUGIN="1"/>
