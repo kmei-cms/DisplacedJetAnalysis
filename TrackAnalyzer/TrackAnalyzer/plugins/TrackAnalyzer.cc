@@ -69,6 +69,8 @@
 //#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerJet.h"
 //#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerEvent.h"
 
+// including LHAPDF (in TrackAnalyzer.h")
+#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzer.h"
 
 //
 // class declaration
@@ -87,6 +89,7 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
+      int ipdf = 1;
 
    private:
       virtual void beginJob() override;
@@ -136,6 +139,9 @@ TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig) :
    secondaryVertexCollectionTag_(consumes<edm::View<reco::Vertex>> (iConfig.getParameter<edm::InputTag>("secondaryVertices")))
 
 {
+   // initialize the PDFs
+   LHAPDF::initPDFSet( ipdf, "NNPDF23_lo_as_0130.qed.LHgrid");
+   
    //now do what ever initialization is needed
    usesResource("TFileService");
    edm::Service<TFileService> fs;
