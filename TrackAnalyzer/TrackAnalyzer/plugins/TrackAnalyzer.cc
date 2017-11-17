@@ -105,7 +105,6 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 	  TFile *outputFile_;
 	  
 
-
 	  //Tokens necessary for the analysis
 	  edm::EDGetTokenT<edm::View<reco::Track>> trackCollectionTag_; //For the generalTracks collection
 	  edm::EDGetTokenT<edm::TriggerResults> triggerResultsTag_; //For the HLT trigger results
@@ -147,6 +146,7 @@ TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig) :
 
 {
    // initialize the PDFs
+   
    // LHAPDF::initPDFSet( ipdf, "NNPDF23_lo_as_0130.qed.LHgrid"); //FIXME : Why does this not work CMSSW_9_2_10?
    
    outputFileName_ = iConfig.getUntrackedParameter<std::string>("outputFileName");
@@ -269,8 +269,6 @@ void TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 }
 
 // ------------ method called to fill all handles in order to do analysis  ------------
-
-
 
 
 // ------------ method called once each job just before starting event loop  ------------
