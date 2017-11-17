@@ -102,6 +102,7 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       virtual void beginJob() override;
       virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
       virtual void endJob() override;
+	  virtual std::vector<std::pair<std::string,int>> createSkimmedTriggerResults(const edm::Event&, edm::Handle<edm::TriggerResults> triggerResultsObject);
 
       // ----------member data ---------------------------
 	  
@@ -239,20 +240,8 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByToken(triggerResultsTag_,triggers);
 
    skimmedTriggerResults.clear();
-
-   const edm::TriggerNames &names = iEvent.triggerNames(*triggers);
-
-   for ( unsigned int itTrigger = 0; itTrigger < triggers->size(); ++itTrigger )
-   {
-       std::string name = names.triggerName(itTrigger);
-	   std::string triggerTag = "Displaced";
-	   if ( name.find(triggerTag) != std::string::npos )
-	   {
-	       int accept = int(triggers->accept(itTrigger));
-		   skimmedTriggerResults.push_back(std::make_pair(name,accept));
-	   }
-   }
-
+   skimmedTriggerResults = createSkimmedTriggerResults(iEvent, triggers);
+   
    runTree_->Fill();
    
    //Analysis loop to iterate over the different tracks
@@ -315,7 +304,28 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 #endif
 }
 
-// ------------ method called to fill all handles in order to do analysis  ------------
+// ------------ method called to fill the trigger results in a vector -------------------
+std::vector<std::pair<std::string,int>>
+TrackAnalyzer::createSkimmedTriggerResults(const edm::Event& iEvent, edm::Handle<edm::TriggerResults> triggerResultsObject )
+{
+   const edm::TriggerNames &names = iEvent.triggerNames(*triggerResultsObject);
+   std::vector<std::pair<std::string,int>> tempSkimmedTriggerResults;
+   tempSkimmedTriggerResults.clear();
+
+   for ( unsigned int itTrigger = 0; itTrigger < triggerResultsObject->size(); ++itTrigger )
+   {
+       std::string name = names.triggerName(itTrigger);
+	   std::string triggerTag = "Displaced";
+	   if ( name.find(triggerTag) != std::string::npos )
+	   {
+	       int accept = int(triggerResultsObject->accept(itTrigger));
+		   tempSkimmedTriggerResults.push_back(std::make_pair(name,accept));
+	   }
+   }
+
+   return tempSkimmedTriggerResults;
+}
+
 
 
 // ------------ method called once each job just before starting event loop  ------------
