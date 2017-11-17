@@ -74,6 +74,11 @@
 // including LHAPDF (in TrackAnalyzer.h")
 #include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzer.h"
 
+
+//including all files needed for proper root implementation
+#include "TFile.h"
+#include "TTree.h"
+
 //
 // class declaration
 //
@@ -101,9 +106,28 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       // ----------member data ---------------------------
 	  
 	  //Variables needed for output file manipulation 
+	  
+	  Int_t        debugger_ = 0;
 	  std::string  outputFileName_;
+	  std::string  jetTreeName_;
+	  std::string  trackTreeName_;
+	  std::string  vertexTreeName_;
+	  std::string  genTreeName_;
+	  
 	  TFile *outputFile_;
 	  
+      //Define all user trees here  #FIXME - move this to it's own separate function eventually
+	  TTree *runTree_; //This is the tree with information like run, lumi, event
+	  TTree *jetTree_;
+	  TTree *trackTree_;
+	  TTree *vertexTree_;
+	  TTree *genTree_;
+
+	  //Define all variables needed for branch definition #FIXME - move this to a separate initialization function?
+	  Int_t run = -1;
+	  Int_t lumi = -1;
+	  Int_t event = -1;
+
 
 	  //Tokens necessary for the analysis
 	  edm::EDGetTokenT<edm::View<reco::Track>> trackCollectionTag_; //For the generalTracks collection
@@ -112,7 +136,6 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       edm::EDGetTokenT<edm::View<reco::GenParticle>> genParticleCollectionTag_; //For the generation information
 	  edm::EDGetTokenT<edm::View<reco::Vertex>> vertexCollectionTag_; //For all of the primary vertices
 	  edm::EDGetTokenT<edm::View<reco::Vertex>> secondaryVertexCollectionTag_; //For all of the secondary vertices
-
 
 	  std::vector<std::string> triggerPaths_;
 
@@ -149,7 +172,12 @@ TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig) :
    
    // LHAPDF::initPDFSet( ipdf, "NNPDF23_lo_as_0130.qed.LHgrid"); //FIXME : Why does this not work CMSSW_9_2_10?
    
+   debugger_       = iConfig.getUntrackedParameter<int>("debugger");
    outputFileName_ = iConfig.getUntrackedParameter<std::string>("outputFileName");
+   jetTreeName_    = iConfig.getUntrackedParameter<std::string>("jetTreeName");
+   trackTreeName_  = iConfig.getUntrackedParameter<std::string>("trackTreeName");
+   vertexTreeName_ = iConfig.getUntrackedParameter<std::string>("vertexTreeName");
+   genTreeName_    = iConfig.getUntrackedParameter<std::string>("genTreeName");
    
    //now do what ever initialization is needed
    usesResource("TFileService");
@@ -183,11 +211,13 @@ void TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
    using namespace edm;
 
    //Initialization procedure
-   int run   = iEvent.id().run();
-   int lumi  = iEvent.id().luminosityBlock();
-   int event = iEvent.id().event();
+   run   = iEvent.id().run();
+   lumi  = iEvent.id().luminosityBlock();
+   event = iEvent.id().event();
 
    std::cout<<"Run: "<<run<<"; LumiBlock: "<<lumi<<"; Event: "<<event<<std::endl;
+
+   runTree_->Fill();
    
    //Analysis loop to iterate over the different tracks
    edm::Handle <View<reco::Track>> tracks;
@@ -276,6 +306,13 @@ void
 TrackAnalyzer::beginJob()
 {
     outputFile_ = new TFile(outputFileName_.c_str(), "RECREATE");
+	runTree_    = new TTree("RunStats", "General run statistics");
+
+	//Define all the branches for the trees you will be using #FIXME - move each tree initialization to a separate function.
+	
+    runTree_->Branch("run", &run, "run/I");
+	runTree_->Branch("lumi", &lumi, "lumi/I");
+	runTree_->Branch("event", &event, "event/I");
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -283,9 +320,10 @@ void
 TrackAnalyzer::endJob() 
 {
     
-	//outputFile_->cd();
+	outputFile_->cd();
     //histo_tracks_pT->Write();
-	//outputFile_->Close();
+	runTree_->Write();
+	outputFile_->Close();
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------

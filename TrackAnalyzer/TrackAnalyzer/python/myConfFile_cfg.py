@@ -28,10 +28,15 @@ process.myAnalysis = cms.EDAnalyzer('TrackAnalyzer',
 	secondaryVertices = cms.InputTag('inclusiveSecondaryVertices')
 )
 
-process.myAnalysis.outputFileName = cms.untracked.string("%smyOutput.root" % outputDir)
+process.myAnalysis.debugger       = cms.untracked.int32(1)
+process.myAnalysis.outputFileName = cms.untracked.string("%smyTrees.root" % outputDir)
+process.myAnalysis.jetTreeName    = cms.untracked.string("ak4CaloJets")
+process.myAnalysis.trackTreeName  = cms.untracked.string("genTracks")
+process.myAnalysis.vertexTreeName = cms.untracked.string("offlinePV")
+process.myAnalysis.genTreeName    = cms.untracked.string("genParticles")
 
 process.TFileService = cms.Service("TFileService",
-	fileName = cms.string("%smyOtherOutput.root" % outputDir)
+	fileName = cms.string("%smyHistograms.root" % outputDir)
 )
 
 
