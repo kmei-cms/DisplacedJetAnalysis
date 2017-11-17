@@ -124,9 +124,24 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 	  TTree *genTree_;
 
 	  //Define all variables needed for branch definition #FIXME - move this to a separate initialization function?
-	  Int_t run = -1;
+
+      //For Run Statistics
+      Int_t run = -1;
 	  Int_t lumi = -1;
 	  Int_t event = -1;
+      std::vector<std::pair<std::string,Int_t>> skimmedTriggerResults;
+
+	  //For Trigger Info
+	  Int_t passDJet40DTrack                = 0;
+	  Int_t passDJet40TightIdDTrack         = 0;
+	  Int_t passDJet40Had                   = 0;
+	  Int_t passDJet40TightIdHad            = 0;
+
+	  Int_t passHt350DDijet40DTrack         = 0;
+	  Int_t passHt350DDijet80DTrack         = 0;
+	  Int_t passHt350DDijet80TightIdDTrack  = 0;
+	  Int_t passHt500DDijet40Inc            = 0;
+	  Int_t passHt550DDijet40Inc            = 0;
 
 
 	  //Tokens necessary for the analysis
@@ -206,7 +221,8 @@ TrackAnalyzer::~TrackAnalyzer()
 //
 
 // ------------ method called for each event  ------------
-void TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+void
+TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
@@ -217,6 +233,26 @@ void TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
    std::cout<<"Run: "<<run<<"; LumiBlock: "<<lumi<<"; Event: "<<event<<std::endl;
 
+   //Analysis loop to iterate over the different trigger paths (decide whether the event passes the trigger or not)
+
+   edm::Handle<edm::TriggerResults> triggers;
+   iEvent.getByToken(triggerResultsTag_,triggers);
+
+   skimmedTriggerResults.clear();
+
+   const edm::TriggerNames &names = iEvent.triggerNames(*triggers);
+
+   for ( unsigned int itTrigger = 0; itTrigger < triggers->size(); ++itTrigger )
+   {
+       std::string name = names.triggerName(itTrigger);
+	   std::string triggerTag = "Displaced";
+	   if ( name.find(triggerTag) != std::string::npos )
+	   {
+	       int accept = int(triggers->accept(itTrigger));
+		   skimmedTriggerResults.push_back(std::make_pair(name,accept));
+	   }
+   }
+
    runTree_->Fill();
    
    //Analysis loop to iterate over the different tracks
@@ -226,25 +262,6 @@ void TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
    for( View<reco::Track>::const_iterator itTrack = tracks->begin(); itTrack != tracks->end(); ++itTrack )
    {
        histo_tracks_pT->Fill(itTrack->pt());
-   }
-
-
-   //Analysis loop to iterate over the different trigger paths (decide whether the event passes the trigger or not)
-
-   edm::Handle<edm::TriggerResults> triggers;
-   iEvent.getByToken(triggerResultsTag_,triggers);
-
-   const edm::TriggerNames &names = iEvent.triggerNames(*triggers);
-
-   for( unsigned int itTrigger = 0; itTrigger < triggers->size(); ++itTrigger )
-   {
-       std::string name = names.triggerName(itTrigger);
-	   std::string triggerTag = "Displaced";
-	   if (name.find(triggerTag) != std::string::npos)
-	   {
-	       bool accept = (triggers->accept(itTrigger));
-	       std::cout<<name<<" "<<accept<<std::endl;
-	   }
    }
 
    //Analysis loop to iterate over the calojets
@@ -313,6 +330,7 @@ TrackAnalyzer::beginJob()
     runTree_->Branch("run", &run, "run/I");
 	runTree_->Branch("lumi", &lumi, "lumi/I");
 	runTree_->Branch("event", &event, "event/I");
+	runTree_->Branch("skimTrigResults", &skimmedTriggerResults);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
