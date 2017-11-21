@@ -34,6 +34,14 @@
 // included in the tutorial for track analysis
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 
+// included for more complicated track analysis (vertex matching)
+#include "TrackingTools/DetLayers/interface/DetLayer.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/PatternTools/interface/TransverseImpactPointExtrapolator.h"
+#include "RecoTracker/DebugTools/interface/GetTrackTrajInfo.h"
+#include "TrackingTools/IPTools/interface/IPTools.h"
+
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -66,14 +74,16 @@
 #include "DataFormats/BTauReco/interface/CandSecondaryVertexTagInfo.h"
 #include "DataFormats/BTauReco/interface/TaggingVariable.h"
 
-// including all user defined objects
-//#include "TrackAnalyzer/RecoTools/plugins/DisplacedJetOverloader.h"
-//#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerJet.h"
-//#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerEvent.h"
-
 //including all files needed for proper root implementation
 #include "TFile.h"
 #include "TTree.h"
+#include "TVector3.h"
+
+// including all user defined objects
+#include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedTrack.h"
+//#include "TrackAnalyzer/RecoTools/plugins/DisplacedJetOverloader.h"
+//#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerJet.h"
+//#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerEvent.h"
 
 // including LHAPDF (in TrackAnalyzer.h")
 #include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzer.h"

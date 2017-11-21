@@ -29,5 +29,11 @@
 <use name="DataFormats/VertexReco"/>
 <use name="DataFormats/BTauReco"/>
 
+<!--For matching the tracks to their respective vertex-->
+<use name="TrackingTools/DetLayers"/>
+<use name="TrackingTools/Records"/>
+<use name="TrackingTools/TransientTrack"/>
+<use name="TrackingTools/PatternTools"/>
+
 <!--For User Generated Information-->
 <flags EDM_PLUGIN="1"/>
