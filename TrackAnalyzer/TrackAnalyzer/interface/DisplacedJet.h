@@ -6,7 +6,7 @@ class DisplacedJet {
 	public:
 	
 	DisplacedJet( const reco::CaloJet   &jet_,
-	              const reco::Vertex    &primaryVertex_,
+	              const reco::Vertex    &primaryVertex,
 				  const bool            &isMC_,
 				  const int             &jetID_,
 				  const edm::EventSetup &iSetup_,
@@ -93,13 +93,17 @@ class DisplacedJet {
 
 
     //Jet Info Extraction Functions
-	reco::TrackCollection getVertexMatchedTracks() { return vertexMatchedTracks; }
-	reco::Vertex          getIVFVertexSelected()   { return selIVF; }
-	reco::Vertex          getSVVertex()            { return selSV; }
+	DisplacedTrackCollection getDisplacedTracks()     { return displacedTracks; }
+	reco::TrackCollection    getVertexMatchedTracks() { return vertexMatchedTracks; }
+	reco::Vertex             getIVFVertexSelected()   { return selIVF; }
+	reco::Vertex             getSVVertex()            { return selSV; }
 
     //Define functions for this class
 	void calcJetAlpha( const reco::TrackCollection&,
 	                   const reco::VertexCollection& );
+	void addVertexTrackInfo( const reco::TrackRefVector& );
+
+    DisplacedTrackCollection displacedTracks;
 
 	private:
 
@@ -108,7 +112,7 @@ class DisplacedJet {
 	reco::Vertex          selIVF;
 	reco::Vertex          selSV;
 
-}
+};
 
 //Function to count the number fo tracks based on the association at the vertex
 void DisplacedJet::addVertexTrackInfo( const reco::TrackRefVector &trackRefs ) {
@@ -165,19 +169,19 @@ void DisplacedJet::calcJetAlpha( const reco::TrackCollection  &tracks,
 	//Loop over the vertices in the event (use beam spot constraint vertices since displaced jets are least likely to come from those)
 	
 	reco::VertexCollection::const_iterator itVertex = primaryVertices.begin();
-	for( ; itVertex != primaryVertcies.end(); ++itVertex ) {
+	for( ; itVertex != primaryVertices.end(); ++itVertex ) {
 	    //Calculate the sums for the specific vertex
 		sumJetPt_temp          = 0;
 		leadingVertexPtSq_temp = 0;
 
-		std::vector<reco::TrackBaseRef>::const_iterator itTrack = itVertex->tracks_begin(();
+		std::vector<reco::TrackBaseRef>::const_iterator itTrack = itVertex->tracks_begin();
 		
 		//Loop over the tracks in the vertex
 		for( ; itTrack != itVertex->tracks_end(); ++itTrack ) {
 		    float tempPt = (*itTrack)->pt();
 
 			if( (*itTrack)->pt() < 1.0 ) continue; // Used to apply a cut on the track pT if necessary
-			leadingVertexPtsq_temp += tempPt * tempPt; //Sort by highest pt squared
+			leadingVertexPtSq_temp += tempPt * tempPt; //Sort by highest pt squared
 
 			//Check for matching to the jet
 			float dr = reco::deltaR( (*itTrack)->eta(), (*itTrack)->phi(), caloEta, caloPhi );

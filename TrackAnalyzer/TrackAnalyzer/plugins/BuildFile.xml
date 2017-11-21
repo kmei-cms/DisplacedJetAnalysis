@@ -34,6 +34,9 @@
 <use name="TrackingTools/Records"/>
 <use name="TrackingTools/TransientTrack"/>
 <use name="TrackingTools/PatternTools"/>
+<use name="RecoTracker/DebugTools"/>
+<use name="TrackingTools/IPTools"/>
+
 
 <!--For User Generated Information-->
 <flags EDM_PLUGIN="1"/>

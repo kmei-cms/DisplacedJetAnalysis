@@ -81,6 +81,8 @@
 
 // including all user defined objects
 #include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedTrack.h"
+#include "TrackAnalyzer/TrackAnalyzer/interface/Displaced2TrackVertex.h"
+#include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedJet.h"
 //#include "TrackAnalyzer/RecoTools/plugins/DisplacedJetOverloader.h"
 //#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerJet.h"
 //#include "TrackAnalyzer/TrackAnalyzer/interface/TrackAnalyzerEvent.h"
