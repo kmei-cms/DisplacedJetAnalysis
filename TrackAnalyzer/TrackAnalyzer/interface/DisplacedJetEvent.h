@@ -31,14 +31,14 @@ class DisplacedJetEvent {
 		
 		int jetIndex = 0;
 		
-		for( ; itCaloJet != caloJets.end(); ++jetIter, ++jetIndex ) {
-            float pt  = jetIter->pt();
-			float eta = jetIter->eta();
+		for( ; itCaloJet != caloJets.end(); ++itCaloJet, ++jetIndex ) {
+            float pt  = itCaloJet->pt();
+			float eta = itCaloJet->eta();
 
 			if( pt > 40 && std::fabs(eta) < 3.0 )  caloHT += pt; //Only add jets with pT higher than 40 GeV and in either the endcap or the barrel
 			if( pt < minPT || std::fabs(eta) > minEta ) continue; //Remove all jets with less PT than the minimum and if out of bounds of analysis #FIXME: Why do we do this?
 			if( pt > 99999 || pt < 0 || isnan(pt) ) {
-			    std::cerr<<"Badly defined jet pT - check event"<<std<<endl;
+			    std::cerr<<"Badly defined jet pT - check event"<<std::endl;
 				continue;
 			}//Eliminate all jets with negative pT, a pT that's too large, or a nonexistent pT
 			if( std::fabs(eta) > 10 || std::fabs(itCaloJet->phi()) < 3.142 ) {
@@ -49,7 +49,7 @@ class DisplacedJetEvent {
 			//Now define the jets with the leading pT and the subleading pT
 			
 			//If no other jet has been saved
-			if( pt  > caloLeadignJetPT && caloLeadingJetPT == -1 ) {
+			if( pt  > caloLeadingJetPT && caloLeadingJetPT == -1 ) {
 			    caloLeadingJetPT = pt;
 			}
 			//If another jet has been saved, compare and if current jet has higher pT
@@ -62,7 +62,7 @@ class DisplacedJetEvent {
 			    caloSubLeadingJetPT = pt;
 			}
 
-			DisplacedJet djet( *itCaloJet, selPV, isMC, jetIDCounter, iSetup, debug );
+			DisplacedJet djet( *itCaloJet, selPV, isMC, jetIndex, iSetup, debug );
 
 			djets.push_back( djet );
 			djetIndex++;
@@ -79,7 +79,7 @@ class DisplacedJetEvent {
 
 	//Ordered Quantities
 	float caloLeadingJetPT;
-	float caloSubLeadingJetPt;
+	float caloSubLeadingJetPT;
 
     //IVF Related
 	int nIVFReconstructed;
@@ -88,5 +88,14 @@ class DisplacedJetEvent {
 	//Index variable for defining how large the displaced jet array is
 	
 	int djetIndex = 0;
-	
-}
+
+	DisplacedJetCollection djets;
+
+	//Variables Used in the Constructor
+	const reco::Vertex     selPV;
+	const float            minPT;
+	const float            minEta;
+	const int              debug;
+	const edm::EventSetup& iSetup;
+
+};
