@@ -52,6 +52,8 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 	  Int_t passHt500DDijet40Inc            = 0;
 	  Int_t passHt550DDijet40Inc            = 0;
 
+      bool isMC_;
+
 
 	  //Tokens necessary for the analysis
 	  edm::EDGetTokenT<edm::View<reco::Track>> trackCollectionTag_; //For the generalTracks collection
@@ -69,6 +71,7 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
 	  TH1D* histo_pv_z;
 	  TH1D* histo_sv_z;
+	  TH1F* histo_alphaMax;
 
       int ipdf = 1;
 };

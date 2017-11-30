@@ -121,6 +121,8 @@ TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig) :
 
    histo_pv_z = fs->make<TH1D>("pv_z","PV z", 50, -10, 10);
    histo_sv_z = fs->make<TH1D>("sv_z","SV z", 50, -10, 10);
+   
+   histo_alphaMax = fs->make<TH1F>("alphaMax","alpha", 20, 0, 10);
 
 }
 
@@ -162,7 +164,7 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    runTree_->Fill();
    
    //Analysis loop to iterate over the different tracks
-   edm::Handle <View<reco::Track>> tracks;
+   edm::Handle<edm::View<reco::Track>> tracks;
    iEvent.getByToken(trackCollectionTag_,tracks);
    
    for( View<reco::Track>::const_iterator itTrack = tracks->begin(); itTrack != tracks->end(); ++itTrack )
@@ -171,8 +173,8 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
    //Analysis loop to iterate over the calojets
-   
-   edm::Handle<View<reco::CaloJet>> caloJets;
+  
+   edm::Handle<edm::View<reco::CaloJet>> caloJets;
    iEvent.getByToken(caloJetCollectionTag_,caloJets);
 
    for( View<reco::CaloJet>::const_iterator itCaloJet = caloJets->begin(); itCaloJet != caloJets->end(); ++itCaloJet )
@@ -188,9 +190,6 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    {
        histo_gen_pT->Fill(itGenParticle->pt());
    }
-
-   //TrackAnalyzerEvent myTrackAnalyzerEvent(caloJets);
-   //fillGenInfo(myTrackAnalyzerEvent,genParticles);
 
    //Analysis loop to iterate over all the vertices
    edm::Handle<View<reco::Vertex>> primaryVertices;
@@ -209,6 +208,12 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    {
        histo_sv_z->Fill(itSecondaryVertex->z());
    }
+   
+
+   float cut_jetPt  = 10.0;
+   float cut_jetEta = 4.5;
+
+   DisplacedJetEvent djEvent( isMC_, *(caloJets.product()), *(primaryVertices.product()), cut_jetPt, cut_jetEta, iSetup, debugger_);
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
    Handle<ExampleData> pIn;
