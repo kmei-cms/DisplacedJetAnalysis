@@ -1,7 +1,10 @@
 typedef std::vector<DisplacedJet> DisplacedJetCollection;
 
+
 class DisplacedJetEvent {
     //Constructor designating the calojets, primary vertices, and kinematics cuts
+	
+	public: 
 	
 	DisplacedJetEvent( const bool &isMC,
 	                   const reco::CaloJetCollection &caloJets,

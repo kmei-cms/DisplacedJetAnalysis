@@ -95,7 +95,7 @@
 TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig) :
    trackCollectionTag_(consumes<reco::TrackCollection> (iConfig.getParameter<edm::InputTag>("tracks"))),
    triggerResultsTag_(consumes<edm::TriggerResults> (iConfig.getParameter<edm::InputTag>("triggers"))),
-   caloJetCollectionTag_(consumes<edm::View<reco::CaloJet>> (iConfig.getParameter<edm::InputTag>("caloJets"))),
+   caloJetCollectionTag_(consumes<reco::CaloJetCollection> (iConfig.getParameter<edm::InputTag>("caloJets"))),
    genParticleCollectionTag_(consumes<edm::View<reco::GenParticle>> (iConfig.getParameter<edm::InputTag>("genParticles"))),
    vertexCollectionTag_(consumes<reco::VertexCollection> (iConfig.getParameter<edm::InputTag>("primaryVertices"))),
    secondaryVertexCollectionTag_(consumes<edm::View<reco::Vertex>> (iConfig.getParameter<edm::InputTag>("secondaryVertices")))
@@ -174,12 +174,12 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    //Analysis loop to iterate over the calojets
   
-   edm::Handle<edm::View<reco::CaloJet>> caloJets;
+   edm::Handle<reco::CaloJetCollection> caloJets;
    iEvent.getByToken(caloJetCollectionTag_,caloJets);
 
-   for( View<reco::CaloJet>::const_iterator itCaloJet = caloJets->begin(); itCaloJet != caloJets->end(); ++itCaloJet )
+   for( const reco::CaloJet &itCaloJet : *caloJets)
    {
-       histo_caloJets_pT->Fill(itCaloJet->pt());
+       histo_caloJets_pT->Fill(itCaloJet.pt());
    }
 
    //Analysis loop to iterate over the gen particles
@@ -209,11 +209,10 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        histo_sv_z->Fill(itSecondaryVertex->z());
    }
    
+   float cut_jetPt  = 10.0;
+   float cut_jetEta = 4.5;
 
-   //float cut_jetPt  = 10.0;
-   //float cut_jetEta = 4.5;
-
-   //DisplacedJetEvent djEvent( isMC_, caloJets.product(), primaryVertices.product(), cut_jetPt, cut_jetEta, iSetup, debugger_);
+   DisplacedJetEvent djEvent( isMC_, *(caloJets.product()), *(primaryVertices.product()), cut_jetPt, cut_jetEta, iSetup, debugger_);
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
    Handle<ExampleData> pIn;

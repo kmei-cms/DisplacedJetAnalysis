@@ -58,7 +58,7 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 	  //Tokens necessary for the analysis
 	  edm::EDGetTokenT<reco::TrackCollection> trackCollectionTag_; //For the generalTracks collection
 	  edm::EDGetTokenT<edm::TriggerResults> triggerResultsTag_; //For the HLT trigger results
-	  edm::EDGetTokenT<edm::View<reco::CaloJet>> caloJetCollectionTag_; //For the caloJets collection
+	  edm::EDGetTokenT<reco::CaloJetCollection> caloJetCollectionTag_; //For the caloJets collection
       edm::EDGetTokenT<edm::View<reco::GenParticle>> genParticleCollectionTag_; //For the generation information
 	  edm::EDGetTokenT<reco::VertexCollection> vertexCollectionTag_; //For all of the primary vertices
 	  edm::EDGetTokenT<edm::View<reco::Vertex>> secondaryVertexCollectionTag_; //For all of the secondary vertices
