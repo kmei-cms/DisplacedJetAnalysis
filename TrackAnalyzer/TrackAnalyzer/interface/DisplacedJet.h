@@ -17,7 +17,7 @@ class DisplacedJet {
 				  isMC(isMC_),
 				  jetID(jetID_),
 				  selPV(primaryVertex) {
-	    if( debug ) std::cout<<"[DEBUG] In the DisplacedJet code and creating a dispalced jet with pT="<<jet_.pt()<<", eta="<<jet_.eta()<<", phi="<<jet_.phi()<<std::endl;
+	    if( debug ) std::cout<<"[DEBUG] In the DisplacedJet code and creating a displaced jet with pT="<<jet_.pt()<<", eta="<<jet_.eta()<<", phi="<<jet_.phi()<<std::endl;
 
 		//Initialize variables in the displaced jet class
 		
@@ -149,7 +149,7 @@ void DisplacedJet::addVertexTrackInfo( const reco::TrackRefVector &trackRefs ) {
 	}
 }
 
-//Function to calculate the jet variable alpha, defined by Josh as the ratio of (Vertex Tracks Sum pT Matching the Jet / (General Tracks Sum Pt Matching the Jet)
+//Function to calculate the jet variable alpha, defined by Josh as the ratio of (Vertex Tracks Sum pT Matching the Jet) / (General Tracks Sum Pt Matching the Jet)
 void DisplacedJet::calcJetAlpha( const reco::TrackCollection  &tracks,
                                  const reco::VertexCollection &primaryVertices ) { 
 

@@ -44,8 +44,8 @@ class DisplacedJetEvent {
 			    std::cerr<<"Badly defined jet pT - check event"<<std::endl;
 				continue;
 			}//Eliminate all jets with negative pT, a pT that's too large, or a nonexistent pT
-			if( std::fabs(eta) > 10 || std::fabs(itCaloJet->phi()) < 3.142 ) {
-			    std::cerr<<"Jet in a region that is not detectable by detector (either by eta or phi"<<std::endl;
+			if( std::fabs(eta) > 10 || std::fabs(itCaloJet->phi()) > 3.142 ) {
+			    std::cerr<<"Jet in a region that is not detectable by detector (either by eta: "<<std::fabs(eta)<<" or phi: "<<std::fabs(itCaloJet->phi())<<")"<<std::endl;
 				continue;
 			}
 
@@ -69,9 +69,9 @@ class DisplacedJetEvent {
 
 			djets.push_back( djet );
 			djetIndex++;
+			//djet.calcJetAlpha
         }
 	}
-
 
 	//Define the variables that are used in the class
 	
@@ -94,6 +94,12 @@ class DisplacedJetEvent {
 
 	DisplacedJetCollection djets;
 
+	//Track related variables used to add vertexing track informtion
+	int nTracks       = 0;
+	int nTracksDisp   = 0;
+	int nTracksPrompt = 0;
+	float sumTrackPt  = 0;
+
 	//Variables Used in the Constructor
 	const reco::Vertex     selPV;
 	const float            minPT;
@@ -101,4 +107,32 @@ class DisplacedJetEvent {
 	const int              debug;
 	const edm::EventSetup& iSetup;
 
+	//Variables used in the helper functions
+    reco::TrackRefVector  vertexMatchedTrackRefs;
+	reco::TrackCollection vertexMatchedTracks;
+	reco::TrackCollection caloMatchedTracks;
+
+	//Functions used for doing vertex matching
+	reco::TrackRefVector   getVertexMatchedTrackRefs() { return vertexMatchedTrackRefs; }
+	reco::TrackCollection  getVertexMatchedTracks()    { return vertexMatchedTracks; }
+	reco::TrackCollection  getCaloMatchedTracks()      { return caloMatchedTracks; }
+
+	//Defining publicly accessible functions
+	DisplacedJetCollection & getDisplacedJets() { return djets; }
+	void addVertexTrackInfo( const reco::TrackRefVector& );
 };
+
+void DisplacedJetEvent::addVertexTrackInfo( const reco::TrackRefVector &trackRefs ) {
+	vertexMatchedTrackRefs = trackRefs;
+
+	if( debug ) std::cout<<"[DEBUG] Adding Vertex Matched Track Info..."<<std::endl;
+
+	nTracks = 0;
+	sumTrackPt = 0;
+	nTracksDisp = 0;
+	nTracksPrompt = 0;
+
+	for( reco::TrackRefVector::const_iterator itTrackRef = trackRefs.begin(); itTrackRef != trackRefs.end(); ++itTrackRef ) {
+		std::cout<<"Track found"<<std::endl;	
+	}
+}

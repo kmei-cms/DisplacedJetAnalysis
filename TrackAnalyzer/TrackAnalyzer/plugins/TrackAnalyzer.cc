@@ -213,6 +213,12 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    float cut_jetEta = 4.5;
 
    DisplacedJetEvent djEvent( isMC_, *(caloJets.product()), *(primaryVertices.product()), cut_jetPt, cut_jetEta, iSetup, debugger_);
+   std::vector<DisplacedJet> myDisplacedJetCollection = djEvent.getDisplacedJets();
+
+   for( std::vector<DisplacedJet>::const_iterator itDjet = myDisplacedJetCollection.begin(); itDjet != myDisplacedJetCollection.end(); ++itDjet )
+   {
+	   std::cout<<"Temp loop place holder"<<std::endl;
+   }
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
    Handle<ExampleData> pIn;

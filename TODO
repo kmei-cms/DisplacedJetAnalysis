@@ -1,3 +1,7 @@
 Things to figure out:
 
 1. How to properly use the edm::View object. Ask the CMSDAS people how to parse the edm information?
+
+2. Develop the python code for the displaced jet tag - using b tag as a base?
+
+3. Make plots of the three major variables (figure out how to uniquely do the track vertex association?)

@@ -40,18 +40,6 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 	  Int_t event = -1;
       std::vector<std::pair<std::string,Int_t>> skimmedTriggerResults;
 
-	  //For Trigger Info
-	  Int_t passDJet40DTrack                = 0;
-	  Int_t passDJet40TightIdDTrack         = 0;
-	  Int_t passDJet40Had                   = 0;
-	  Int_t passDJet40TightIdHad            = 0;
-
-	  Int_t passHt350DDijet40DTrack         = 0;
-	  Int_t passHt350DDijet80DTrack         = 0;
-	  Int_t passHt350DDijet80TightIdDTrack  = 0;
-	  Int_t passHt500DDijet40Inc            = 0;
-	  Int_t passHt550DDijet40Inc            = 0;
-
       bool isMC_;
 
 
