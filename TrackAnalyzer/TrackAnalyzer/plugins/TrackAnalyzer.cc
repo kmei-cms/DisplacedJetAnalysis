@@ -253,7 +253,17 @@ TrackAnalyzer::createSkimmedTriggerResults(const edm::Event& iEvent, edm::Handle
    return tempSkimmedTriggerResults;
 }
 
+// ------------ method called once to calculate the alphaMax variable ------------------
 
+//void
+//TrackAnalyzer::makeAlphaMaxPlot(DisplacedJetEvent &displacedJetEvent) {
+
+//	const DisplacedJetCollection djetCollection = displacedJetEvent.getDisplacedJets();
+//	for( DisplacedJetCollection::const_iterator itDjet = djetCollection.begin(); itDjet != djetCollection.end(); ++itDjet ){
+//		histo_alphaMax->Fill(itDjet->alphaMax);
+//	}
+	
+//}
 
 // ------------ method called once each job just before starting event loop  ------------
 void 

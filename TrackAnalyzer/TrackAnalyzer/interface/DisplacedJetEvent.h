@@ -69,7 +69,7 @@ class DisplacedJetEvent {
 
 			djets.push_back( djet );
 			djetIndex++;
-			//djet.calcJetAlpha
+			djet.calcJetAlpha(djet.getVertexMatchedTracks(), primaryVertices);
         }
 	}
 
@@ -118,21 +118,37 @@ class DisplacedJetEvent {
 	reco::TrackCollection  getCaloMatchedTracks()      { return caloMatchedTracks; }
 
 	//Defining publicly accessible functions
-	DisplacedJetCollection & getDisplacedJets() { return djets; }
-	void addVertexTrackInfo( const reco::TrackRefVector& );
+	DisplacedJetCollection& getDisplacedJets() { return djets; }
+	void                    mergeTrackAssociations ( const reco::JetTracksAssociation::Container&,
+													 const reco::JetTracksAssociation::Container& );
+	DisplacedJet&           findDisplacedJetByPtEtaPhi( const float&, const float&, const float& );
 };
 
-void DisplacedJetEvent::addVertexTrackInfo( const reco::TrackRefVector &trackRefs ) {
-	vertexMatchedTrackRefs = trackRefs;
+//Need this to get add the vertex track info FIXME:Add the variables needed in this function to the class
+void DisplacedJetEvent::mergeTrackAssociations( const reco::JetTracksAssociation::Container& caloMatched, const reco::JetTracksAssociation::Container& vertexMatched) {
 
-	if( debug ) std::cout<<"[DEBUG] Adding Vertex Matched Track Info..."<<std::endl;
+	std::vector<reco::JetBaseRef> caloJets   = reco::JetTracksAssociation::allJets(caloMatched);
+	std::vector<reco::JetBaseRef> vertexJets = reco::JetTracksAssociation::allJets(vertexMatched);
 
-	nTracks = 0;
-	sumTrackPt = 0;
-	nTracksDisp = 0;
-	nTracksPrompt = 0;
-
-	for( reco::TrackRefVector::const_iterator itTrackRef = trackRefs.begin(); itTrackRef != trackRefs.end(); ++itTrackRef ) {
-		std::cout<<"Track found"<<std::endl;	
+	if( caloJets.size() != vertexJets.size() ) {
+		throw cms::Exception("TrackAssociationJetMatchingFailure");
 	}
+
+	for( std::vector<reco::JetBaseRef>::const_iterator itJetBaseRef = caloJets.begin(); itJetBaseRef != caloJets.end(); ++itJetBaseRef ) {
+		//Writing code that finds the displaced jet by pt, eta and phi?
+	}
+}
+
+DisplacedJet& DisplacedJetEvent::findDisplacedJetByPtEtaPhi( const float& pt,
+															 const float& eta,
+															 const float& phi ) {
+	if( debug ) std::cout<<"[DEBUG] Looking for a displaced jet by pt, eta and phi"<<std::endl;
+	//bool foundMatchingJet =  0;
+
+	for( std::vector<DisplacedJet>::const_iterator itDjet = djets.begin(); itDjet != djets.end(); ++itDjet ) {
+		std::cout<<"Temp loop placeholder"<<std::endl;
+		//Define finding jet crtierion here!
+	}
+
+	return djets[0];
 }

@@ -200,4 +200,5 @@ void DisplacedJet::calcJetAlpha( const reco::TrackCollection  &tracks,
 
 	alpha       = sumJetPt;
 	alphaMax    = sumJetPtMax;
+	std::cout<<"AlphaMax: "<<alphaMax<<std::endl;
 }
