@@ -93,11 +93,11 @@
 
 
 TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig) :
-   trackCollectionTag_(consumes<edm::View<reco::Track>> (iConfig.getParameter<edm::InputTag>("tracks"))),
+   trackCollectionTag_(consumes<reco::TrackCollection> (iConfig.getParameter<edm::InputTag>("tracks"))),
    triggerResultsTag_(consumes<edm::TriggerResults> (iConfig.getParameter<edm::InputTag>("triggers"))),
    caloJetCollectionTag_(consumes<edm::View<reco::CaloJet>> (iConfig.getParameter<edm::InputTag>("caloJets"))),
    genParticleCollectionTag_(consumes<edm::View<reco::GenParticle>> (iConfig.getParameter<edm::InputTag>("genParticles"))),
-   vertexCollectionTag_(consumes<edm::View<reco::Vertex>> (iConfig.getParameter<edm::InputTag>("primaryVertices"))),
+   vertexCollectionTag_(consumes<reco::VertexCollection> (iConfig.getParameter<edm::InputTag>("primaryVertices"))),
    secondaryVertexCollectionTag_(consumes<edm::View<reco::Vertex>> (iConfig.getParameter<edm::InputTag>("secondaryVertices")))
 
 {
@@ -164,12 +164,12 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    runTree_->Fill();
    
    //Analysis loop to iterate over the different tracks
-   edm::Handle<edm::View<reco::Track>> tracks;
+   edm::Handle<reco::TrackCollection> tracks;
    iEvent.getByToken(trackCollectionTag_,tracks);
    
-   for( View<reco::Track>::const_iterator itTrack = tracks->begin(); itTrack != tracks->end(); ++itTrack )
+   for( const reco::Track &itTrack : *tracks)
    {
-       histo_tracks_pT->Fill(itTrack->pt());
+       histo_tracks_pT->Fill(itTrack.pt());
    }
 
    //Analysis loop to iterate over the calojets
@@ -192,16 +192,16 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
    //Analysis loop to iterate over all the vertices
-   edm::Handle<View<reco::Vertex>> primaryVertices;
+   edm::Handle<reco::VertexCollection> primaryVertices;
    iEvent.getByToken(vertexCollectionTag_, primaryVertices);
 
    edm::Handle<View<reco::Vertex>> secondaryVertices;
    iEvent.getByToken(secondaryVertexCollectionTag_, secondaryVertices);
 
 
-   for( View<reco::Vertex>::const_iterator itPrimaryVertex = primaryVertices->begin(); itPrimaryVertex != primaryVertices->end(); ++itPrimaryVertex )
+   for( const reco::Vertex &itPrimaryVertex : *primaryVertices)
    {
-       histo_pv_z->Fill(itPrimaryVertex->z());
+       histo_pv_z->Fill(itPrimaryVertex.z());
    }
    
    for( View<reco::Vertex>::const_iterator itSecondaryVertex = secondaryVertices->begin(); itSecondaryVertex != secondaryVertices->end(); ++itSecondaryVertex )
@@ -210,10 +210,10 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
    
 
-   float cut_jetPt  = 10.0;
-   float cut_jetEta = 4.5;
+   //float cut_jetPt  = 10.0;
+   //float cut_jetEta = 4.5;
 
-   DisplacedJetEvent djEvent( isMC_, *(caloJets.product()), *(primaryVertices.product()), cut_jetPt, cut_jetEta, iSetup, debugger_);
+   //DisplacedJetEvent djEvent( isMC_, caloJets.product(), primaryVertices.product(), cut_jetPt, cut_jetEta, iSetup, debugger_);
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
    Handle<ExampleData> pIn;
@@ -271,7 +271,6 @@ TrackAnalyzer::endJob()
 {
     
 	outputFile_->cd();
-    //histo_tracks_pT->Write();
 	runTree_->Write();
 	outputFile_->Close();
 }
