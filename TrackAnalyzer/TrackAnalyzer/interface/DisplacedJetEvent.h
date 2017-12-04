@@ -116,6 +116,7 @@ class DisplacedJetEvent {
 	reco::TrackRefVector   getVertexMatchedTrackRefs() { return vertexMatchedTrackRefs; }
 	reco::TrackCollection  getVertexMatchedTracks()    { return vertexMatchedTracks; }
 	reco::TrackCollection  getCaloMatchedTracks()      { return caloMatchedTracks; }
+	//DisplacedJet& myDisplacedJet;
 
 	//Defining publicly accessible functions
 	DisplacedJetCollection& getDisplacedJets() { return djets; }
@@ -143,12 +144,21 @@ DisplacedJet& DisplacedJetEvent::findDisplacedJetByPtEtaPhi( const float& pt,
 															 const float& eta,
 															 const float& phi ) {
 	if( debug ) std::cout<<"[DEBUG] Looking for a displaced jet by pt, eta and phi"<<std::endl;
-	//bool foundMatchingJet =  0;
 
-	for( std::vector<DisplacedJet>::const_iterator itDjet = djets.begin(); itDjet != djets.end(); ++itDjet ) {
-		std::cout<<"Temp loop placeholder"<<std::endl;
-		//Define finding jet crtierion here!
+	bool displacedJetFound = false;
+	std::vector<DisplacedJet>::iterator myDjet;
+
+	for( std::vector<DisplacedJet>::iterator itDjet = djets.begin(); itDjet != djets.end(); ++itDjet ) {
+		bool matchPt  = (itDjet->caloPt  == pt);
+		bool matchEta = (itDjet->caloEta == eta);
+		bool matchPhi = (itDjet->caloPhi == phi);
+
+		if( matchPt && matchEta && matchPhi ) {
+			displacedJetFound = true;
+			myDjet = itDjet;
+			break;
+		}
 	}
-
-	return djets[0];
+	assert(displacedJetFound);
+	return *myDjet;
 }
