@@ -120,23 +120,55 @@ class DisplacedJetEvent {
 
 	//Defining publicly accessible functions
 	DisplacedJetCollection& getDisplacedJets() { return djets; }
+	void                    mergeCaloIPTagInfo ( const reco::TrackIPTagInfoCollection&,
+	                                             const reco::VertexCollection& );
+
 	void                    mergeTrackAssociations ( const reco::JetTracksAssociation::Container&,
 													 const reco::JetTracksAssociation::Container& );
+	
 	DisplacedJet&           findDisplacedJetByPtEtaPhi( const float&, const float&, const float& );
 };
 
-//Need this to get add the vertex track info FIXME:Add the variables needed in this function to the class
+void DisplacedJetEvent::mergeCaloIPTagInfo( const reco::TrackIPTagInfoCollection &ipTagInfo,
+											const reco::VertexCollection &primaryVertices ) {
+
+	if( debug ) std::cout<<"[DEBUG] Merging Calo IP Tag Info"<<std::endl;
+	for( reco::TrackIPTagInfoCollection::const_iterator itIPinfo = ipTagInfo.begin(); itIPinfo != ipTagInfo.end(); ++itIPinfo ) {
+		const reco::Jet jet = *itIPinfo->jet();
+		const float &pt 	= jet.pt();
+		const float &eta    = jet.eta();
+		const float &phi    = jet.phi();
+
+		if( pt < minPT || std::fabs(eta) > minEta ) continue;
+
+		DisplacedJet &djet = findDisplacedJetByPtEtaPhi( pt, eta, phi );
+		const reco::TrackRefVector trackRefs = itIPinfo->selectedTracks();
+
+		djet.addIPTagInfo( *itIPinfo );
+	
+	}
+}
+
+
+
+//Need this to get add the vertex track info FIXME:Maybe just use the vertex matching
 void DisplacedJetEvent::mergeTrackAssociations( const reco::JetTracksAssociation::Container& caloMatched, const reco::JetTracksAssociation::Container& vertexMatched) {
 
-	std::vector<reco::JetBaseRef> caloJets   = reco::JetTracksAssociation::allJets(caloMatched);
+	//std::vector<reco::JetBaseRef> caloJets   = reco::JetTracksAssociation::allJets(caloMatched); FIXME - Josh commented out all the caloJet information...interesting
 	std::vector<reco::JetBaseRef> vertexJets = reco::JetTracksAssociation::allJets(vertexMatched);
 
-	if( caloJets.size() != vertexJets.size() ) {
-		throw cms::Exception("TrackAssociationJetMatchingFailure");
-	}
+//	if( caloJets.size() != vertexJets.size() ) {
+//		throw cms::Exception("TrackAssociationJetMatchingFailure");
+//	}
 
-	for( std::vector<reco::JetBaseRef>::const_iterator itJetBaseRef = caloJets.begin(); itJetBaseRef != caloJets.end(); ++itJetBaseRef ) {
-		//Writing code that finds the displaced jet by pt, eta and phi?
+	for( std::vector<reco::JetBaseRef>::const_iterator itJetBaseRef = vertexJets.begin(); itJetBaseRef != vertexJets.end(); ++itJetBaseRef ) {
+		float pt  = (*itJetBaseRef)->pt();
+		float eta = (*itJetBaseRef)->eta();
+		float phi = (*itJetBaseRef)->phi();
+
+		if( pt < minPT || std::fabs(eta) > minEta ) continue;
+		DisplacedJet &djet = findDisplacedJetByPtEtaPhi( pt, eta, phi );
+		djet.addVertexTrackInfo( reco::JetTracksAssociation::getValue( vertexMatched, *itJetBaseRef ) );
 	}
 }
 

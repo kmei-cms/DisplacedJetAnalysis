@@ -90,7 +90,10 @@ class DisplacedJet {
 	float alphaMax;
 
 	//Jet Impact Parameter Variables
-
+	std::vector<float> ip3dVector;
+	std::vector<float> ip3dsVector;
+	std::vector<float> ip2dVector;
+	std::vector<float> ip2dsVector;
 
     //Jet Info Extraction Functions
 	DisplacedTrackCollection getDisplacedTracks()     { return displacedTracks; }
@@ -102,6 +105,7 @@ class DisplacedJet {
 	void calcJetAlpha( const reco::TrackCollection&,
 	                   const reco::VertexCollection& );
 	void addVertexTrackInfo( const reco::TrackRefVector& );
+	void addIPTagInfo( const reco::TrackIPTagInfo& );
 
     DisplacedTrackCollection displacedTracks;
 
@@ -112,7 +116,38 @@ class DisplacedJet {
 	reco::Vertex          selIVF;
 	reco::Vertex          selSV;
 
+	std::vector<reco::btag::TrackIPData> lifetimeIPData;
+
 };
+//Function to add the impact parameter info to each displaced jet
+void DisplacedJet::addIPTagInfo( const reco::TrackIPTagInfo &ipTagInfo ) {
+	if( debug ) std::cout<<"[DEBUG] Adding secondary vertex IP info into the displaced jet"<<std::endl;
+
+	//Pull the Impact Parameter Data
+	lifetimeIPData = ipTagInfo.impactParameterData();
+
+	//Loop over the IP info on each track
+	for( std::vector<reco::btag::TrackIPData>::const_iterator itIP = lifetimeIPData.begin(); itIP != lifetimeIPData.end(); ++itIP ) {
+		if( debug ) std::cout<<"[DEBUG] Filling up IP Info"<<std::endl;
+
+		float ip3d  = itIP->ip3d.value();
+		float ip3ds = itIP->ip3d.significance();
+		float ip2d  = itIP->ip2d.value();
+		float ip2ds = itIP->ip2d.significance();
+		
+		float jetAxisDis    = itIP->distanceToJetAxis.value();
+		float jetAxisDisSig = itIP->distanceToJetAxis.significance();
+
+		//Fill the vectors
+		ip3dVector.push_back(ip3d);
+		ip2dVector.push_back(ip2d);
+		ip3dsVector.push_back(ip3ds);
+		ip2dsVector.push_back(ip2ds);
+
+		std::cout<<jetAxisDis<<" "<<jetAxisDisSig<<" "<<std::endl;
+	}
+}
+
 
 //Function to count the number fo tracks based on the association at the vertex
 void DisplacedJet::addVertexTrackInfo( const reco::TrackRefVector &trackRefs ) {
