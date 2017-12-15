@@ -86,11 +86,20 @@ class DisplacedTrack {
 		    TVector3 lastPos3D ( lastPos.x(), lastPos.y(), lastPos.z() );
 		    TVector3 lastPos2D ( lastPos.x(), lastPos.y(), 0.0 );
 
-		    TVector3 refMom3D  ( innerPosMom.x(), innerPosMom.y(), innerPosMom.z() );
-		    TVector3 refMom2D  ( innerPosMom.x(), innerPosMom.y(), 0.0 );
+		    TVector3 innerMom3D  ( innerPosMom.x(), innerPosMom.y(), innerPosMom.z() );
+		    TVector3 innerMom2D  ( innerPosMom.x(), innerPosMom.y(), 0.0 );
 
 		    TVector3 outerMom3D( lastPosMom.x(), lastPosMom.y(), lastPosMom.z() );
 		    TVector3 outerMom2D( lastPosMom.x(), lastPosMom.y(), 0.0 );
+		    
+			TVector3 refMom3D( px, py, pz );
+		    TVector3 refMom2D( px, py, 0.0 );
+
+			//Angular Variables Related to the Primary Vertex
+			angleMomentumAndPVAtInnerHit2D = ( -1 * ( pvVector2D - innerPos2D ) ).Angle( refMom2D );
+			angleMomentumAndPVAtInnerHit3D = ( -1 * ( pvVector3D - innerPos3D ) ).Angle( refMom3D );
+			angleMomentumAndPVAtOuterHit2D = ( -1 * ( pvVector2D - innerPos2D ) ).Angle( innerMom2D );
+			angleMomentumAndPVAtOuterHit3D = ( -1 * ( pvVector3D - innerPos3D ) ).Angle( innerMom3D );
 		}
 
 		else {
@@ -176,6 +185,13 @@ class DisplacedTrack {
 	TrajectoryStateOnSurface tsosInnerHit;
 	TrajectoryStateOnSurface tsosNextHit;
 	TrajectoryStateOnSurface tsosLastHit;
+
+	//Angle Related Variables for the Track
+	float angleMomentumAndPVAtInnerHit2D;
+	float angleMomentumAndPVAtInnerHit3D;
+	float angleMomentumAndPVAtOuterHit2D;
+	float angleMomentumAndPVAtOuterHit3D;
+	
 
 	
 };

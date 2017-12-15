@@ -145,6 +145,10 @@ void DisplacedJetEvent::mergeCaloIPTagInfo( const reco::TrackIPTagInfoCollection
 		const reco::TrackRefVector trackRefs = itIPinfo->selectedTracks();
 
 		djet.addIPTagInfo( *itIPinfo );
+		djet.addHitInfo( djet.getVertexMatchedTracks() );
+		djet.addTrackAngles( djet.getDisplacedTracks() );
+		//djet.addV0Info( djet.getVertexMatchedTrackRefs() );
+		djet.calcJetAlpha( djet.getVertexMatchedTracks(), primaryVertices );
 	
 	}
 }
