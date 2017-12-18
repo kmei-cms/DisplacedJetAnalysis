@@ -116,7 +116,7 @@ class DisplacedJetEvent {
 	reco::TrackRefVector   getVertexMatchedTrackRefs() { return vertexMatchedTrackRefs; }
 	reco::TrackCollection  getVertexMatchedTracks()    { return vertexMatchedTracks; }
 	reco::TrackCollection  getCaloMatchedTracks()      { return caloMatchedTracks; }
-	//DisplacedJet& myDisplacedJet;
+	DisplacedJet& myDisplacedJet;
 
 	//Defining publicly accessible functions
 	DisplacedJetCollection& getDisplacedJets() { return djets; }
@@ -147,7 +147,7 @@ void DisplacedJetEvent::mergeCaloIPTagInfo( const reco::TrackIPTagInfoCollection
 		djet.addIPTagInfo( *itIPinfo );
 		djet.addHitInfo( djet.getVertexMatchedTracks() );
 		djet.addTrackAngles( djet.getDisplacedTracks() );
-		//djet.addV0Info( djet.getVertexMatchedTrackRefs() );
+		djet.addV0Info( djet.getVertexMatchedTrackRefs() );
 		djet.calcJetAlpha( djet.getVertexMatchedTracks(), primaryVertices );
 	
 	}

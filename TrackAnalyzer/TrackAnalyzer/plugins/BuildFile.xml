@@ -28,6 +28,8 @@
 <!--For Primary (Secondary) Vertex Information-->
 <use name="DataFormats/VertexReco"/>
 <use name="DataFormats/BTauReco"/>
+<use name="RecoVertex/AdaptiveVertexFit"/>
+<use name="RecoVertex/KalmanVertexFit"/>
 
 <!--For matching the tracks to their respective vertex-->
 <use name="TrackingTools/DetLayers"/>

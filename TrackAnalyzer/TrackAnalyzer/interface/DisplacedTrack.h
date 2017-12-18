@@ -100,6 +100,14 @@ class DisplacedTrack {
 			angleMomentumAndPVAtInnerHit3D = ( -1 * ( pvVector3D - innerPos3D ) ).Angle( refMom3D );
 			angleMomentumAndPVAtOuterHit2D = ( -1 * ( pvVector2D - innerPos2D ) ).Angle( innerMom2D );
 			angleMomentumAndPVAtOuterHit3D = ( -1 * ( pvVector3D - innerPos3D ) ).Angle( innerMom3D );
+
+			//Coordinates
+			innerX	= innerPos.x();
+			innerY	= innerPos.y();
+			innerZ	= innerPos.z();
+			nextX	= nextPos.x();
+			nextY 	= nextPos.y();
+			nextZ	= nextPos.z();
 		}
 
 		else {
@@ -156,6 +164,14 @@ class DisplacedTrack {
 	float nLostHits;
 	float nValidHits;
 	bool  hasPixelHits;
+
+	//Hit Related
+	float innerX;
+	float innerY;
+	float innerZ;
+	float nextX;
+	float nextY;
+	float nextZ;
 
 	//Impact Parameter Related
 	float dxy;

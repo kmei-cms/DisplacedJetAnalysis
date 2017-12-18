@@ -66,6 +66,8 @@
 // included to get primary vertex information
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/BTauReco/interface/VertexTypes.h"
+#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
+#include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
 
 // included to get secondary vertex information
 #include "DataFormats/BTauReco/interface/SecondaryVertexTagInfo.h"

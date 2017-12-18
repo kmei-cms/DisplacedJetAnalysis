@@ -96,10 +96,11 @@ class DisplacedJet {
 	std::vector<float> ip2dsVector;
 
     //Jet Info Extraction Functions
-	DisplacedTrackCollection getDisplacedTracks()     { return displacedTracks; }
-	reco::TrackCollection    getVertexMatchedTracks() { return vertexMatchedTracks; }
-	reco::Vertex             getIVFVertexSelected()   { return selIVF; }
-	reco::Vertex             getSVVertex()            { return selSV; }
+	DisplacedTrackCollection getDisplacedTracks()     	 { return displacedTracks; }
+	reco::TrackCollection    getVertexMatchedTracks() 	 { return vertexMatchedTracks; } 
+	reco::TrackRefVector	 getVertexMatchedTrackRefs() { return vertexMatchedTrackRefs; }
+	reco::Vertex             getIVFVertexSelected()   	 { return selIVF; }
+	reco::Vertex             getSVVertex()            	 { return selSV; }
 
     //Define functions for this class
 	void calcJetAlpha( const reco::TrackCollection&,
@@ -172,6 +173,39 @@ class DisplacedJet {
 
 	float jetMedianTrackValidHitFrac;
 	float jetMeanTrackValidHitFrac;
+
+	//Vertex Related Function and Variables
+	void addV0Info( const reco::TrackRefVector tracks );
+
+	int jetOneTrackNuclearCount;
+	int jetTwoTrackNuclearCount;
+	int jetVertexNearBPIX1;
+	int jetVertexNearBPIX2;
+	int jetVertexNearBPIX;
+	int jetTightNuclear;
+	int jetLooseNuclear;
+	int jetNV0NoHitBehindVertex;
+	int jetNV0HitBehindVertex;
+	int jetNV0KShort;
+	int jetNV0Lambda;
+	int jetV0HIndex;
+	
+	//Clique Related Function and Variables
+	typedef std::vector<std::vector<int>> vertexGraph;
+	vertexGraph buildInputGraph( const std::vector<std::pair<int,int>>& graph_edges, const std::vector<int>& uniq_tracks, const bool& print);
+	void findVertexCliques();
+	int findRefTrack( const reco::TrackRef ref, const reco::TrackRefVector vector );
+	int calcHIndex( const vertexGraph& graph );
+	void calcClusterSize( const DisplacedV0Collection& vertices, const float& errorWindow );
+	void calcNJetClusterSize( const DisplacedV0Collection& vertices, std::vector<DisplacedJet>& djets, const float& errorWindow );
+	
+	//Combinatorial Vertices for the Jet
+	vertexGraph v0Grpah;
+	DisplacedV0Collection displacedV0Vector;
+	DisplacedV0Collection displacedV0VectorCleaned;
+	std::vector<TransientVertex> transientV0Vector;
+	std::vector<TransientVertex> transientV0VectorCleaned;
+
 
 	// Jet Distribution Calculator
 	float getJetMedian( const std::vector<float>&, bool );
@@ -442,6 +476,102 @@ void DisplacedJet::addTrackAngles( const DisplacedTrackCollection& tracks ) {
 	ptSumCosTheta3D 	/= sumTrackPtValid ? sumTrackPtValid : 1;
 	ptSumCosThetaDet2D	/= sumTrackPtValid ? sumTrackPtValid : 1;
 	ptSumCosThetaDet3D 	/= sumTrackPtValid ? sumTrackPtValid : 1;
+}
+
+//Function to add the primary vertex information
+void DisplacedJet::addV0Info( const reco::TrackRefVector tracks ) {
+
+	//Get the transient track builder
+	edm::ESHandle<TransientTrackBuilder> builder;
+	iSetup.get<TransientTrackRecord>().get( "TransientTrackBuilder", builder );
+
+	//Loop over all the pairs of tracks
+	int nTracks = displacedTracks.size();
+	for( int itTrack1 = 0; itTrack1 < nTracks; ++itTrack1 ) {
+		for( int itTrack2 = 0; itTrack2 < nTracks; ++ itTrack2 ) {
+
+			DisplacedTrack track1 = displacedTracks[itTrack1];
+			DisplacedTrack track2 = displacedTracks[itTrack2];
+
+			if( !track1.isValid || !track2.isValid ) continue;
+
+			if( std::fabs( track1.ip2dSig ) < 2 || std::fabs( track2.ip2dSig ) < 2 ) continue;
+
+			Displaced2TrackVertex vertex( track1, track2, selPV, iSetup, debug );
+
+			if( vertex.chi2 > 20 || !vertex.isValid ) continue;
+
+			displacedV0Vector.push_back( vertex );		
+		}
+	}
+
+	int v0VectorSize = displacedV0Vector.size();
+
+	for( int itVertex = 0; itVertex < v0VectorSize; ++itVertex ) {
+
+		Displaced2TrackVertex vertex = displacedV0Vector[itVertex];
+
+		static const float MIN_DISTANCE = 0.05;
+		bool oneTrackNuclear = ( vertex.dInnerHitTrack1 < MIN_DISTANCE ) || ( vertex.dInnerHitTrack2 < MIN_DISTANCE );
+		bool twoTrackNuclear = ( vertex.dInnerHitTrack1 < MIN_DISTANCE ) && ( vertex.dInnerHitTrack2 < MIN_DISTANCE );
+
+		//Make sure that the inner hits are in the pixel barrel and the vertex is transversely close to a given layer
+		//Josh always assumes the vertex is not near BPIX3 - maybe ask why?
+		bool vertexNearBeamPipe = vertex.lxy < 2.3 	&& vertex.lxy > 2.1 && vertex.tot_xyE < 0.03;
+		bool vertexNearBPIX1 	= vertex.lxy < 5 	&& vertex.lxy > 4	&& vertex.tot_xyE < 0.03;
+		bool vertexNearBPIX2	= vertex.lxy < 7.8	&& vertex.lxy > 6.8	&& vertex.tot_xyE < 0.03;
+		bool vertexNearBPIX		= vertexNearBeamPipe || vertexNearBPIX1 || vertexNearBPIX2;
+
+		if( oneTrackNuclear ) jetOneTrackNuclearCount++;
+		if( twoTrackNuclear ) jetTwoTrackNuclearCount++;
+		if( vertexNearBPIX1 ) jetVertexNearBPIX1++;
+		if( vertexNearBPIX2 ) jetVertexNearBPIX2++;
+		if( vertexNearBPIX  ) jetVertexNearBPIX++;
+		if( vertexNearBPIX && oneTrackNuclear ) jetLooseNuclear++;
+		if( vertexNearBPIX && twoTrackNuclear ) jetTightNuclear++;
+
+		//Restrict the inner hit behind calls to tracks that can enter the Median IP significance calculation.
+		if( vertex.innerHitBehindVertex1 && vertex.innerHitBehindVertex2 ) jetNV0HitBehindVertex++;
+
+		//Count all vertices (including the ones from tracks who do not enter the Median IP significance calculation)
+		//Require the vertices aren't fake with hits behind the position
+		//Must have 2D significance of at least 1 as to not be consistent with the beamspot
+		//Must be outside 1/2 mm
+
+		if( !vertex.innerHitBehindVertex1 && !vertex.innerHitBehindVertex2 && vertex.chi2 < 20 && vertex.lxy > 0.05 && std::fabs( vertex.lxySig ) > 3 ) {
+			jetNV0NoHitBehindVertex++;
+			displacedV0VectorCleaned.push_back( vertex );
+		}
+
+		//Particle Comparisons
+		jetNV0KShort += vertex.isKShort ? 1 : 0;
+		jetNV0Lambda += vertex.isLambda ? 1 : 0;
+	}
+
+	//Create the graph of vertex associatiation and find the h index (find VertexCliques();
+	//Fill information for the clustering of the vertices;
+	calcClusterSize( displacedV0VectorCleaned, 2 );
+}
+
+void DisplacedJet::calcClusterSize( const DisplacedV0Collectio& vertices, const float& errorWindow ) {
+
+	const int nVtx = vertices.size();
+
+	if( nVtx == 0 ) return;
+
+	DisplacedCluster *maxCluster = NULL;
+
+	//Check every vertex in a jet for the largest number of vertices within an error window
+	//Call the vertexing behind the checked center
+	
+	for( int center  = 0; center < nVtx; ++center ) {
+		Displaced2TrackVertex neighVtx = vertices[center];
+		if( !centerVtx.isValid ) continue;
+
+		//Candidate cluster
+		DisplacedCluster cluster_temp( centerVtx, selPV, iSetup, debug );
+
+	}
 }
 
 //Function to calculate the jet variable alpha, defined by Josh as the ratio of (Vertex Tracks Sum pT Matching the Jet) / (General Tracks Sum Pt Matching the Jet)
