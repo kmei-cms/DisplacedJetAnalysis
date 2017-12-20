@@ -80,10 +80,13 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TVector3.h"
+#include "TGraphErrors.h"
+#include "TF1.h"
 
 // including all user defined objects
 #include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedTrack.h"
 #include "TrackAnalyzer/TrackAnalyzer/interface/Displaced2TrackVertex.h"
+#include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedCluster.h"
 #include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedJet.h"
 #include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedJetEvent.h"
 //#include "TrackAnalyzer/RecoTools/plugins/DisplacedJetOverloader.h"

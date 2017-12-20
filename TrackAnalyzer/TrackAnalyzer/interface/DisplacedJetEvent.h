@@ -1,6 +1,5 @@
 typedef std::vector<DisplacedJet> DisplacedJetCollection;
 
-
 class DisplacedJetEvent {
     //Constructor designating the calojets, primary vertices, and kinematics cuts
 	
@@ -116,7 +115,6 @@ class DisplacedJetEvent {
 	reco::TrackRefVector   getVertexMatchedTrackRefs() { return vertexMatchedTrackRefs; }
 	reco::TrackCollection  getVertexMatchedTracks()    { return vertexMatchedTracks; }
 	reco::TrackCollection  getCaloMatchedTracks()      { return caloMatchedTracks; }
-	DisplacedJet& myDisplacedJet;
 
 	//Defining publicly accessible functions
 	DisplacedJetCollection& getDisplacedJets() { return djets; }

@@ -64,7 +64,7 @@ class DisplacedCluster {
 
 		//Container of Vertices
 		std::vector<Displaced2TrackVertex> v0s;
-		std::vector<DisplacedTrck> uniq_tracks;
+		std::vector<DisplacedTrack> uniq_tracks;
 	
 };
 
@@ -80,18 +80,18 @@ void DisplacedCluster::fitVertices() {
 
 	//Define vector pointing to the center of the cluster
 	TVector3 pvToCenter( -1 * ( selPV.x() - meanX ), -1 * ( selPV.y() - meanY ), 0.0 );
-	TVector3 vertexMom( center.px, center.py, 0.0 );
+	TVector3 vertexMomentum( center.px, center.py, 0.0 );
 
 	if( nVertices == 0 ) return;
 
-	cosAngletToMomentum = pvToCenter.Angle( vertexMomentum );
+	cosAngleToMomentum = pvToCenter.Angle( vertexMomentum );
 
 	if( nVertices < 2 ) return;
 
 	float x[nVertices];
 	float y[nVertices];
-	float xE[nVertices];
-	float yE[nVertices];
+	//float xE[nVertices];
+	//float yE[nVertices];
 
 	//Loop over all the vertices and fill the arrays for the TGraph
 	//Relative to the primary vertex system
@@ -99,8 +99,8 @@ void DisplacedCluster::fitVertices() {
 	for( int itVertex = 0; itVertex < nVertices; ++itVertex ) {
 		x[itVertex] 	= v0s[itVertex].x - meanX + .000001 * itVertex;
 		y[itVertex] 	= v0s[itVertex].y - meanY + .000001 * itVertex;
-		xE[itVertex] 	= v0s[itVertex].xE;
-		yE[itVertex]	= v0s[itVertex].yE;
+		//xE[itVertex] 	= v0s[itVertex].xE;
+		//yE[itVertex]	= v0s[itVertex].yE;
 	}
 
 	//Build the Graph
@@ -143,33 +143,33 @@ void DisplacedCluster::fitVertices() {
 void DisplacedCluster::findUniqueTracks() {
 	if( nV0 == 0 || v0s.size() == 0 ) return;
 	
-	for( DisplacedV0Collection:const_iterator itVertex = v0s.begin(); itVertex != v0s.end(); ++itVertex ) {
+	for( DisplacedV0Collection::const_iterator itVertex = v0s.begin(); itVertex != v0s.end(); ++itVertex ) {
 		bool found_match1 = false;
 		bool found_match2 = false;
 
 		if( !itVertex->isValid ) continue;
 
 		for( std::vector<DisplacedTrack>::const_iterator itTrack = uniq_tracks.begin(); itTrack != uniq_tracks.end(); ++itTrack ) {
-			if( uniq_track.size() == 0 ) break;
+			if( uniq_tracks.size() == 0 ) break;
 
 			//Compare the track references stored in the DisplacedTrack object
 			DisplacedTrack tr1 = itVertex->track1;
 			DisplacedTrack tr2 = itVertex->track2;
 
 			//Compare by reference
-			bool refMatch1 	= itTrack->trackRef == tr1.trackRef;
-			bool refMatch2	= itTrack->trackRef == tr2.trackRef;
+			bool refMatch1 	= ( itTrack->trackRef == tr1.trackRef );
+			bool refMatch2	= ( itTrack->trackRef == tr2.trackRef );
 
 			//Update the matching
-			found_match1 	= found_match1 || refMatch1;
-			found_match2	= found_match2 || refMatch2;
+			found_match1 	= ( found_match1 || refMatch1 );
+			found_match2	= ( found_match2 || refMatch2 );
 
 			//If both are found, we are done
 			if( found_match1 && found_match2 ) continue;
 		}
 
-		DisplacedTrack tr1 = vtxIter->getTrack1();
-		DisplacedTrack tr2 = vtxIter->getTrack2();
+		DisplacedTrack tr1 = itVertex->getTrack1();
+		DisplacedTrack tr2 = itVertex->getTrack2();
 
 		if( !found_match1 ) uniq_tracks.push_back( tr1 );
 		if( !found_match2 ) uniq_tracks.push_back( tr2 );
@@ -186,7 +186,7 @@ bool DisplacedCluster::containsVertex( const Displaced2TrackVertex& vtx ) {
 	for( DisplacedV0Collection::const_iterator itVertex = v0s.begin(); itVertex != v0s.end(); ++itVertex ) {
 		bool refMatch1 = vtx.track1.trackRef == itVertex->track1.trackRef;
 		bool refMatch2 = vtx.track2.trackRef == itVertex->track2.trackRef;
-		found_match = true;
+		found_match = ( found_match || (refMatch1 && refMatch2 ) );
 	}
 
 	return found_match;
@@ -210,7 +210,7 @@ void DisplacedCluster::buildClusterQuantities() {
 
 		sumPX += itVertex->px;
 		sumPY += itVertex->py;
-		sumPz += itVertex->pz;
+		sumPZ += itVertex->pz;
 	}
 
 	fitVertices();

@@ -189,6 +189,22 @@ class DisplacedJet {
 	int jetNV0KShort;
 	int jetNV0Lambda;
 	int jetV0HIndex;
+
+	//Cluster Related Variables
+	DisplacedCluster *v0Cluster = NULL;
+	int	  jetV0ClusterSize;
+	float jetV0ClusterLxy;
+	float jetV0ClusterLxySig;
+	float jetV0ClusterLxyz;
+	float jetV0ClusterLxyzSig;
+	float jetV0ClusterX;
+	float jetV0ClusterY;
+	float jetV0ClusterZ;
+	float jetV0ClusterChi2;
+	float jetV0ClusterIntercept;
+	float jetV0ClusterAngle;
+	float jetV0ClusterAngleMom;
+	int   jetV0ClusterNTracks;
 	
 	//Clique Related Function and Variables
 	typedef std::vector<std::vector<int>> vertexGraph;
@@ -197,7 +213,7 @@ class DisplacedJet {
 	int findRefTrack( const reco::TrackRef ref, const reco::TrackRefVector vector );
 	int calcHIndex( const vertexGraph& graph );
 	void calcClusterSize( const DisplacedV0Collection& vertices, const float& errorWindow );
-	void calcNJetClusterSize( const DisplacedV0Collection& vertices, std::vector<DisplacedJet>& djets, const float& errorWindow );
+	//void calcNJetClusterSize( const DisplacedV0Collection& vertices, std::vector<DisplacedJet>& djets, const float& errorWindow );
 	
 	//Combinatorial Vertices for the Jet
 	vertexGraph v0Grpah;
@@ -221,6 +237,14 @@ class DisplacedJet {
 	reco::Vertex          selSV;
 
 	std::vector<reco::btag::TrackIPData> lifetimeIPData;
+
+	float metric2D( float x, float y ) {
+		return std::sqrt( x*x + y*y );
+	}
+
+	float metric3D( float x, float y, float z ) {
+		return std::sqrt ( x*x + y*y + z*z );
+	}
 
 };
 //Function to add the impact parameter info to each displaced jet
@@ -553,7 +577,7 @@ void DisplacedJet::addV0Info( const reco::TrackRefVector tracks ) {
 	calcClusterSize( displacedV0VectorCleaned, 2 );
 }
 
-void DisplacedJet::calcClusterSize( const DisplacedV0Collectio& vertices, const float& errorWindow ) {
+void DisplacedJet::calcClusterSize( const DisplacedV0Collection& vertices, const float& errorWindow ) {
 
 	const int nVtx = vertices.size();
 
@@ -565,13 +589,61 @@ void DisplacedJet::calcClusterSize( const DisplacedV0Collectio& vertices, const 
 	//Call the vertexing behind the checked center
 	
 	for( int center  = 0; center < nVtx; ++center ) {
-		Displaced2TrackVertex neighVtx = vertices[center];
+		
+		Displaced2TrackVertex centerVtx = vertices[center];
 		if( !centerVtx.isValid ) continue;
 
 		//Candidate cluster
 		DisplacedCluster cluster_temp( centerVtx, selPV, iSetup, debug );
 
+		//Loop over all the possible neighbors
+
+		for( int neighbor = 0; neighbor < nVtx; ++neighbor ) {
+		
+			if( center == neighbor )  continue;
+			Displaced2TrackVertex neighVtx = vertices[neighbor];
+
+			if( !neighVtx.isValid ) continue;
+
+			float dx		= centerVtx.x - neighVtx.x;
+			float dy		= centerVtx.y - neighVtx.y;
+			float distance	= metric2D( dx, dy );
+			float sig		= distance / metric2D( neighVtx.tot_xyE, centerVtx.tot_xyE );
+
+			if( sig < errorWindow ) cluster_temp.addVertex( neighVtx );
+		}
+
+		//Set the max cluster for the first iteration
+		
+		if( maxCluster == NULL ) {
+			maxCluster = &cluster_temp;
+			continue;
+		}
+
+		// Otherwise, it needs to have more vertices
+
+		if( cluster_temp.nV0 > maxCluster->nV0 ) maxCluster = &cluster_temp;
 	}
+
+	//Build the related cluster quantities
+	maxCluster->buildClusterQuantities();
+
+	//Set quantities related to the max cluster
+	
+	v0Cluster				= maxCluster;
+	jetV0ClusterSize		= maxCluster->nV0;
+	jetV0ClusterLxy			= maxCluster->center.lxy;
+	jetV0ClusterLxyz		= maxCluster->center.lxyz;
+	jetV0ClusterLxySig		= maxCluster->center.lxySig;
+	jetV0ClusterLxyzSig		= maxCluster->center.lxyzSig;
+	jetV0ClusterX			= maxCluster->center.x;
+	jetV0ClusterY			= maxCluster->center.y;
+	jetV0ClusterZ			= maxCluster->center.z;
+	jetV0ClusterChi2		= maxCluster->fitChi2;
+	jetV0ClusterIntercept	= maxCluster->interceptPv;
+	jetV0ClusterAngle		= maxCluster->cosAngleToFit;
+	jetV0ClusterAngleMom	= maxCluster->cosAngleToMomentum;
+	jetV0ClusterNTracks		= maxCluster->nTracks;
 }
 
 //Function to calculate the jet variable alpha, defined by Josh as the ratio of (Vertex Tracks Sum pT Matching the Jet) / (General Tracks Sum Pt Matching the Jet)
