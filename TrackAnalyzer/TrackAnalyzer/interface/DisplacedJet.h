@@ -205,6 +205,24 @@ class DisplacedJet {
 	float jetV0ClusterAngle;
 	float jetV0ClusterAngleMom;
 	int   jetV0ClusterNTracks;
+
+	//IVF Related Variables
+	float selIVFIsPVScore;
+	bool  selIVFIsPV;
+	float ivfX;
+	float ivfY;
+	float ivfZ;
+	float ivfXError;
+	float ivfYError;
+	float ivfZError;
+	int   ivfNTracks;
+	float ivfMass;
+	float ivfLxySig;
+	float ivfLxyzSig;
+	float ivfLxy;
+	float ivfLxyz;
+	float ivfMatchingScore;
+
 	
 	//Clique Related Function and Variables
 	typedef std::vector<std::vector<int>> vertexGraph;
@@ -214,9 +232,34 @@ class DisplacedJet {
 	int calcHIndex( const vertexGraph& graph );
 	void calcClusterSize( const DisplacedV0Collection& vertices, const float& errorWindow );
 	//void calcNJetClusterSize( const DisplacedV0Collection& vertices, std::vector<DisplacedJet>& djets, const float& errorWindow );
+	void addSVTagInfo( const reco::SecondaryVertexTagInfo& );
+	void addIVFCollection( const reco::VertexCollection& );
 	
+	//Secondary Vertex Related Variables
+	int svNVertex;
+	int svNTracks;
+	int scNDof;
+	float svX;
+	float svY;
+	float svZ;
+	float svChi2;
+	float svXError;
+	float svYError;
+	float svZError;
+
+	float svAngle2D;
+	float svAngle3D;
+	float svMass;
+	float svPt;
+	float svEta;
+	float svPhi;
+	float svLxyzSig;
+	float svLxySig;
+	float svLxyz;
+	float svLxy;
+
 	//Combinatorial Vertices for the Jet
-	vertexGraph v0Grpah;
+	vertexGraph v0Graph;
 	DisplacedV0Collection displacedV0Vector;
 	DisplacedV0Collection displacedV0VectorCleaned;
 	std::vector<TransientVertex> transientV0Vector;
@@ -502,6 +545,88 @@ void DisplacedJet::addTrackAngles( const DisplacedTrackCollection& tracks ) {
 	ptSumCosThetaDet3D 	/= sumTrackPtValid ? sumTrackPtValid : 1;
 }
 
+void DisplacedJet::addSVTagInfo( const reco::SecondaryVertexTagInfo& svTagInfo ) {
+	svNVertex = svTagInfo.nVertices();
+
+	//Track the Best Reconstructed Vertex
+	int svIndex		= 0;
+	int mostTracks	= 0;
+	int tieBreaker	= 0;
+
+	//Loop Over All the Reconstructed Vertices and Choose the Best One
+	for( int itVertex = 0; itVertex < svNVertex; itVertex++ ) {
+		reco::Vertex vertex = svTagInfo.secondaryVertex( itVertex );
+		float pt = vertex.p4().pt();
+		int nTracksSV = vertex.nTracks();
+
+		//Take the vertex with the most tracks, tie breaker is the sum pt of vertex
+		if( ( nTracksSV > mostTracks ) || ( nTracksSV == mostTracks && pt > tieBreaker ) ) {
+			mostTracks = nTracksSV;
+			tieBreaker = pt;
+			svIndex = itVertex;
+		}
+	}
+
+	//Pick the Selected Vertex
+	const reco::Vertex & selVertex = svTagInfo.secondaryVertex( svIndex );
+
+	//Set the gloabl vertex to the selected vertex
+	selSV	= selVertex;
+
+	//Store the Quantities of the Selected Vertex
+	
+	svX			= selVertex.x();
+	svY			= selVertex.y();
+	svZ			= selVertex.z();
+
+	svNTracks	= selSV.nTracks();
+	svChi2		= selSV.chi2();
+	scNDof		= selSV.ndof();
+
+	svXError	= selSV.xError();
+	svYError	= selSV.yError();
+	svZError	= selSV.zError();
+
+	float pvxE	= selPV.xError();
+	float pvyE	= selPV.yError();
+	float pvzE	= selPV.zError();
+
+	float xE	= metric2D( svXError, pvxE );
+	float yE	= metric2D( svYError, pvyE );
+	float zE	= metric2D( svZError, pvzE );
+
+	float dx	= selPV.x() - svX;
+	float dy 	= selPV.y() - svY;
+	float dz	= selPV.z() - svZ;
+
+	TVector3 pvVector3D( selPV.x(), selPV.y(), selPV.z() );
+	TVector3 pvVector2D( selPV.x(), selPV.y(), 0.0 );
+	TVector3 svVector3D( selSV.x(), selSV.y(), selSV.z() );
+	TVector3 svVector2D( selSV.x(), selSV.y(), 0.0 );
+
+	TVector3 svMom3D( selVertex.p4().x(), selVertex.p4().y(), selVertex.p4().z() );
+	TVector3 svMom2D( selVertex.p4().x(), selVertex.p4().y(), 0.0 );
+
+	float sign2D = ( svMom2D * ( svVector2D - pvVector2D ) ) > 0 ? -1 : 1;
+	float sign3D = ( svMom3D * ( svVector3D - pvVector3D ) ) > 0 ? -1 : 1;
+
+	TVector3 pvToVertex2D( sign2D * dx, sign2D * dy, 0.0 );
+	TVector3 pvToVertex3D( sign3D * dx, sign3D * dy, sign3D * dz );
+
+	svAngle2D = pvToVertex2D.Angle( svMom2D );
+	svAngle3D = pvToVertex3D.Angle( svMom3D );
+
+	svMass 		= selVertex.p4().mass();
+	svPt 		= selVertex.p4().pt();
+	svEta		= selVertex.p4().eta();
+	svPhi		= selVertex.p4().phi();
+	svLxySig	= std::sqrt( dx * dx + dy * dy ) / std::sqrt( xE * xE + yE * yE );
+	svLxyzSig	= std::sqrt( dx * dx + dy * dy + dz * dz ) / std::sqrt( xE * xE + yE * yE + zE * zE );
+	svLxy		= std::sqrt( dx * dx + dy * dy );
+	svLxyz		= std::sqrt( dx * dx + dy * dy + dz * dz );
+
+}
+
 //Function to add the primary vertex information
 void DisplacedJet::addV0Info( const reco::TrackRefVector tracks ) {
 
@@ -698,6 +823,56 @@ void DisplacedJet::calcJetAlpha( const reco::TrackCollection  &tracks,
 	alpha       = sumJetPt;
 	alphaMax    = sumJetPtMax;
 	std::cout<<"AlphaMax: "<<alphaMax<<std::endl;
+}
+
+//The following function adds info for the intermediate vertex 
+void DisplacedJet::addIVFCollection( const reco::VertexCollection& vertices ) {
+	JetVertexAssociation JVAIVF ("IVF", selPV, debug );
+	for( reco::VertexCollection::const_iterator itVertex = vertices.begin(); itVertex != vertices.end(); ++itVertex ) {
+		JVAIVF.addVertex( *itVertex );
+	}
+
+	const std::pair<reco::Vertex, float> 	bestVertexPair 	= JVAIVF.getBestVertex( jet, "oneOverR" );
+	const reco::Vertex						bestVertex		= bestVertexPair.first;
+	const float								bestVertexScore = bestVertexPair.second;
+
+	selIVF = bestVertex;
+
+	float x = bestVertex.x();
+	float y = bestVertex.y();
+	float z = bestVertex.z();
+	float dx = x - selPV.x();
+	float dy = y - selPV.y();
+	float dz = z - selPV.z();
+
+	selIVFIsPVScore = std::sqrt( (dx/x) * (dx/x) + (dy/y) * (dy/y) + (dz/z) * (dz/z) );
+	selIVFIsPV		= selIVFIsPVScore < .05;
+
+	float svxE = bestVertex.xError();
+	float svyE = bestVertex.yError();
+	float svzE = bestVertex.zError();
+	float pvxE = selPV.xError();
+	float pvyE = selPV.yError();
+	float pvzE = selPV.zError();
+	float xE   = std::sqrt( svxE * svxE + pvxE * pvxE );
+	float yE   = std::sqrt( svyE * svyE + pvyE * pvyE );
+	float zE   = std::sqrt( svzE * svzE + pvzE * pvzE );
+
+	ivfX		= selIVFIsPV ? 0 : x;
+	ivfY		= selIVFIsPV ? 0 : y;
+	ivfZ		= selIVFIsPV ? 0 : z;
+	ivfXError	= selIVFIsPV ? 0 : svxE;
+	ivfYError	= selIVFIsPV ? 0 : svyE;
+	ivfZError	= selIVFIsPV ? 0 : svzE;
+
+	ivfNTracks 	= selIVFIsPV ? 0 : bestVertex.nTracks();
+	ivfMass		= selIVFIsPV ? 0 : bestVertex.p4().mass();
+	ivfLxySig	= selIVFIsPV ? 0 : std::sqrt( dx * dx + dy * dy ) / std::sqrt( xE * xE + yE * yE );
+	ivfLxyzSig	= selIVFIsPV ? 0 : std::sqrt( dx * dx + dy * dy + dz * dz ) / std::sqrt( xE * xE + yE * yE + zE * zE );
+	ivfLxy		= selIVFIsPV ? 0 : std::sqrt( dx * dx + dy * dy );
+	ivfLxyz		= selIVFIsPV ? 0 : std::sqrt( dx * dx + dy * dy + dz * dz );
+
+	ivfMatchingScore = bestVertexScore;
 }
 
 //The following three functions are needed for getHitInfo

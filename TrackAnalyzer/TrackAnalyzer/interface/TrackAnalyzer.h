@@ -38,6 +38,14 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       Int_t run = -1;
 	  Int_t lumi = -1;
 	  Int_t event = -1;
+
+	  int   evNum = 0;
+	  Int_t jetid = 0;
+
+
+	  //Other Tree Variables
+	  
+	  Int_t nCaloJets = 0;
       std::vector<std::pair<std::string,Int_t>> skimmedTriggerResults;
 
       bool isMC_;
@@ -50,6 +58,9 @@ class TrackAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       edm::EDGetTokenT<edm::View<reco::GenParticle>> genParticleCollectionTag_; //For the generation information
 	  edm::EDGetTokenT<reco::VertexCollection> vertexCollectionTag_; //For all of the primary vertices
 	  edm::EDGetTokenT<edm::View<reco::Vertex>> secondaryVertexCollectionTag_; //For all of the secondary vertices
+	  edm::EDGetTokenT<reco::JetTracksAssociationCollection> caloMatchedTracksTag_; //For the calo based tracks
+	  edm::EDGetTokenT<reco::JetTracksAssociationCollection> vertexMatchedTracksTag_; //For the vertex based tracks
+	  edm::EDGetTokenT<reco::TrackIPTagInfoCollection> lifetimeIPTag_; //Impact parameter tag
 
 	  std::vector<std::string> triggerPaths_;
 

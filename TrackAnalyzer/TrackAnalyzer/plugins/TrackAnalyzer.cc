@@ -84,6 +84,7 @@
 #include "TF1.h"
 
 // including all user defined objects
+#include "TrackAnalyzer/DisplacedJetSVAssociator/interface/JetVertexAssociation.h"
 #include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedTrack.h"
 #include "TrackAnalyzer/TrackAnalyzer/interface/Displaced2TrackVertex.h"
 #include "TrackAnalyzer/TrackAnalyzer/interface/DisplacedCluster.h"
@@ -103,7 +104,10 @@ TrackAnalyzer::TrackAnalyzer(const edm::ParameterSet& iConfig) :
    caloJetCollectionTag_(consumes<reco::CaloJetCollection> (iConfig.getParameter<edm::InputTag>("caloJets"))),
    genParticleCollectionTag_(consumes<edm::View<reco::GenParticle>> (iConfig.getParameter<edm::InputTag>("genParticles"))),
    vertexCollectionTag_(consumes<reco::VertexCollection> (iConfig.getParameter<edm::InputTag>("primaryVertices"))),
-   secondaryVertexCollectionTag_(consumes<edm::View<reco::Vertex>> (iConfig.getParameter<edm::InputTag>("secondaryVertices")))
+   secondaryVertexCollectionTag_(consumes<edm::View<reco::Vertex>> (iConfig.getParameter<edm::InputTag>("secondaryVertices"))),
+   caloMatchedTracksTag_(consumes<reco::JetTracksAssociationCollection> (iConfig.getParameter<edm::InputTag>("caloMatchedTrackAssociation"))),
+   vertexMatchedTracksTag_(consumes<reco::JetTracksAssociationCollection> (iConfig.getParameter<edm::InputTag>("vertexMatchedTrackAssociation"))),
+   lifetimeIPTag_(consumes<reco::TrackIPTagInfoCollection> (iConfig.getParameter<edm::InputTag>("lifetimeIPTagInfo")))
 
 {
    // initialize the PDFs
@@ -217,9 +221,33 @@ TrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    float cut_jetPt  = 10.0;
    float cut_jetEta = 4.5;
 
-   DisplacedJetEvent djEvent( isMC_, *(caloJets.product()), *(primaryVertices.product()), cut_jetPt, cut_jetEta, iSetup, debugger_);
-   std::vector<DisplacedJet> myDisplacedJetCollection = djEvent.getDisplacedJets();
+   edm::Handle<reco::JetTracksAssociationCollection> caloTracksAssociation;
+   iEvent.getByToken(caloMatchedTracksTag_, caloTracksAssociation);
+   edm::Handle<reco::JetTracksAssociationCollection> vertexTracksAssociation;
+   iEvent.getByToken(vertexMatchedTracksTag_, vertexTracksAssociation);
+   edm::Handle<reco::TrackIPTagInfoCollection> lifetimeInfo;
+   iEvent.getByToken(lifetimeIPTag_, lifetimeInfo);
+   
+   //Build te displaced Jet and start filling the trees
 
+   DisplacedJetEvent djEvent( isMC_, *(caloJets.product()), *(primaryVertices.product()), cut_jetPt, cut_jetEta, iSetup, debugger_);
+   
+   //Basic Event Information
+   run			= iEvent.id().run();
+   lumi			= iEvent.id().luminosityBlock();
+   event		= iEvent.id().event();
+
+   //Add the track associations
+   djEvent.mergeTrackAssociations( *(caloTracksAssociation.product()), *(vertexTracksAssociation.product()) );
+   //Merge in the Event Info After Associations
+   djEvent.mergeCaloIPTagInfo( *(lifetimeInfo.product()), *(primaryVertices.product()) );
+   
+   evNum++;
+   
+   //Add the secondary vertexer from Btags
+   //djEvent.mergeSVTagInfo( svTagInfo );
+   
+   std::vector<DisplacedJet> myDisplacedJetCollection = djEvent.getDisplacedJets();
    for( std::vector<DisplacedJet>::const_iterator itDjet = myDisplacedJetCollection.begin(); itDjet != myDisplacedJetCollection.end(); ++itDjet )
    {
 	   std::cout<<"Temp loop place holder"<<std::endl;

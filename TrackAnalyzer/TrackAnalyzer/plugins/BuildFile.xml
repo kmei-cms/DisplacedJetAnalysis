@@ -39,6 +39,7 @@
 <use name="RecoTracker/DebugTools"/>
 <use name="TrackingTools/IPTools"/>
 
-
 <!--For User Generated Information-->
+<!--use name="TrackAnalyzer/DisplacedJetSVAssociator"/-->
+
 <flags EDM_PLUGIN="1"/>

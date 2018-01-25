@@ -68,11 +68,38 @@ class DisplacedJetEvent {
 
 			djets.push_back( djet );
 			djetIndex++;
-			djet.calcJetAlpha(djet.getVertexMatchedTracks(), primaryVertices);
+			//djet.calcJetAlpha(djet.getVertexMatchedTracks(), primaryVertices);
         }
+
+		//Merge Primary Vertices into Event
+		for( reco::VertexCollection::const_iterator itVertex = primaryVertices.begin(); itVertex != primaryVertices.end(); ++itVertex ) {
+			pVertices.push_back( *itVertex );
+		}
+
+		//Initialize the Leading Subleading Track Variables
+		caloFewestPromptTracks 			= 999;
+		caloSubFewestPromptTracks		= 999;
+		caloMostDispTracks				= -1;
+		caloSubMostDispTracks			= -1;
+
+		//HLT Variables
+		caloFewestPromptTracksHLT		= 999;
+		caloSubFewestPromptTracksHLT	= 999;
+		caloMostDispTracksHLT			= -1;
+		caloSubMostDispTracksHLT		= -1;
+
+		//By Hadronic Fraction for PT > 40 GeV;
+		caloLeadingHadronicFraction 	= -1;
 	}
 
 	//Define the variables that are used in the class
+	
+	//Variables Used in the Constructor
+	const reco::Vertex     selPV;
+	const float            minPT;
+	const float            minEta;
+	const int              debug;
+	const edm::EventSetup& iSetup;
 	
 	//Kinematic Variables:
 	float caloHT;
@@ -83,15 +110,24 @@ class DisplacedJetEvent {
 	float caloLeadingJetPT;
 	float caloSubLeadingJetPT;
 
+	//By PT for Inclusive Requirements
+	float caloFewestPromptTracks;
+	float caloSubFewestPromptTracks;
+	float caloMostDispTracks;
+	float caloSubMostDispTracks;
+
+	//HLT for Inclusive Requirements
+	float caloFewestPromptTracksHLT;
+	float caloSubFewestPromptTracksHLT;
+	float caloMostDispTracksHLT;
+	float caloSubMostDispTracksHLT;
+
+	//By Hadronic Fraction for PT > 40 GeV
+	float caloLeadingHadronicFraction;
+
     //IVF Related
 	int nIVFReconstructed;
 	int nIVFGenMatched;
-
-	//Index variable for defining how large the displaced jet array is
-	
-	int djetIndex = 0;
-
-	DisplacedJetCollection djets;
 
 	//Track related variables used to add vertexing track informtion
 	int nTracks       = 0;
@@ -99,32 +135,39 @@ class DisplacedJetEvent {
 	int nTracksPrompt = 0;
 	float sumTrackPt  = 0;
 
-	//Variables Used in the Constructor
-	const reco::Vertex     selPV;
-	const float            minPT;
-	const float            minEta;
-	const int              debug;
-	const edm::EventSetup& iSetup;
 
 	//Variables used in the helper functions
-    reco::TrackRefVector  vertexMatchedTrackRefs;
-	reco::TrackCollection vertexMatchedTracks;
-	reco::TrackCollection caloMatchedTracks;
+	
+	reco::VertexCollection	pVertices;
+	reco::VertexCollection	ivfVertices;
+	
+    reco::TrackRefVector	vertexMatchedTrackRefs;
+	reco::TrackCollection	vertexMatchedTracks;
+	reco::TrackCollection	caloMatchedTracks;
 
 	//Functions used for doing vertex matching
-	reco::TrackRefVector   getVertexMatchedTrackRefs() { return vertexMatchedTrackRefs; }
-	reco::TrackCollection  getVertexMatchedTracks()    { return vertexMatchedTracks; }
-	reco::TrackCollection  getCaloMatchedTracks()      { return caloMatchedTracks; }
+	reco::TrackRefVector	getVertexMatchedTrackRefs() { return vertexMatchedTrackRefs; }
+	reco::TrackCollection	getVertexMatchedTracks()    { return vertexMatchedTracks; }
+	reco::TrackCollection	getCaloMatchedTracks()      { return caloMatchedTracks; }
 
 	//Defining publicly accessible functions
 	DisplacedJetCollection& getDisplacedJets() { return djets; }
-	void                    mergeCaloIPTagInfo ( const reco::TrackIPTagInfoCollection&,
-	                                             const reco::VertexCollection& );
-
-	void                    mergeTrackAssociations ( const reco::JetTracksAssociation::Container&,
-													 const reco::JetTracksAssociation::Container& );
-	
+	void                    mergeCaloIPTagInfo( const reco::TrackIPTagInfoCollection&,
+	                                            const reco::VertexCollection& );
+	void                    mergeTrackAssociations( const reco::JetTracksAssociation::Container&,
+													const reco::JetTracksAssociation::Container& );
+	void					addIVFVertices( const reco::VertexCollection& );
+	void					mergeSVTagInfo( const reco::SecondaryVertexTagInfoCollection& ); 	
 	DisplacedJet&           findDisplacedJetByPtEtaPhi( const float&, const float&, const float& );
+
+	private:
+
+	static const int GEN_STATUS_CODE_MATCH		= 23;
+	static const int GEN_STATUS_CODE_MATCH_MOM	= 62;
+
+	//Index variable for defining how large the displaced jet array is
+	DisplacedJetCollection						djets;
+	int djetIndex 								= 0;
 };
 
 void DisplacedJetEvent::mergeCaloIPTagInfo( const reco::TrackIPTagInfoCollection &ipTagInfo,
@@ -151,7 +194,30 @@ void DisplacedJetEvent::mergeCaloIPTagInfo( const reco::TrackIPTagInfoCollection
 	}
 }
 
+void DisplacedJetEvent::mergeSVTagInfo ( const reco::SecondaryVertexTagInfoCollection& svTagInfoCollection ) {
+	
+	for( reco::SecondaryVertexTagInfoCollection::const_iterator itSV = svTagInfoCollection.begin(); itSV != svTagInfoCollection.end(); ++itSV ) {
+		const reco::Jet *jet 	= itSV->jet().get();
+		float pt 				= jet->pt();
+		float eta 				= jet->eta();
+		float phi				= jet->phi();
 
+		if( pt < minPT || std::fabs(eta) > minEta ) continue;
+
+		DisplacedJet& djet = findDisplacedJetByPtEtaPhi( pt, eta, phi );
+		djet.addSVTagInfo( *itSV );
+	}
+}
+
+void DisplacedJetEvent::addIVFVertices( const reco::VertexCollection& vertices ) {
+
+	nIVFReconstructed = vertices.size();
+	ivfVertices = vertices;
+	
+	for( std::vector<DisplacedJet>::iterator itDJet = djets.begin(); itDJet != djets.end(); ++itDJet ) {
+		itDJet->addIVFCollection( vertices );
+	}
+}
 
 //Need this to get add the vertex track info FIXME:Maybe just use the vertex matching
 void DisplacedJetEvent::mergeTrackAssociations( const reco::JetTracksAssociation::Container& caloMatched, const reco::JetTracksAssociation::Container& vertexMatched) {

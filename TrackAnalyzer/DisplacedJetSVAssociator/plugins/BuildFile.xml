@@ -1,0 +1,17 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="FWCore/Utilities"/>
+
+<use name="DataFormats/VertexReco"/>
+<use name="RecoBTag/SecondaryVertex"/>
+<use name="RecoVertex/VertexPrimitives"/>
+
+<use name="DataFormats/TrackReco"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="DataFormats/BTauReco"/>
+
+<use name="boost"/>
+<use name="clhep"/>
+
+<flags EDM_PLUGIN="1"/>
